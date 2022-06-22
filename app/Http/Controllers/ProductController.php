@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Contracts\Loyalty\LoyaltyService;
 use App\Http\Requests\StoreProductRequest;
 use App\Http\Requests\UpdateProductRequest;
 use App\Models\Product;
@@ -13,9 +14,13 @@ class ProductController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(LoyaltyService $loyaltyService)
     {
-        return view('products.index', ['products' => Product::all()]);
+        $products = Product::take(10)->get();
+        $products->each(function($product) use ($loyaltyService) {
+            $product->discount = $loyaltyService->calcDiscount($product->price);
+        });
+        return view('products.index', ['products' => $products]);
     }
 
     /**
@@ -47,7 +52,7 @@ class ProductController extends Controller
      */
     public function show(Product $product)
     {
-        //
+        //return view('products.index', ['products' => Product::find($product->id)]);
     }
 
     /**
